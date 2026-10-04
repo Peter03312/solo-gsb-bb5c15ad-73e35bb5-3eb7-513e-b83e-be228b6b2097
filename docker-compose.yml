@@ -1,0 +1,25 @@
+services:
+  license-service:
+    build: .
+    image: dataset-license-service:1.0.0
+    container_name: dataset-license-service
+    ports:
+      - "8080:8080"
+    environment:
+      # SQLite 数据文件位置（容器内），持久化到命名卷
+      DATABASE_PATH: /data/licensing.db
+      HOST: 0.0.0.0
+      PORT: "8080"
+      # 启动时写入演示数据（幂等）。生产环境可设为 false
+      SEED_DEMO_DATA: "true"
+    volumes:
+      - license-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,urllib.request;port=os.getenv('PORT','8080');urllib.request.urlopen(f'http://127.0.0.1:{port}/health',timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  license-data:
